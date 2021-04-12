@@ -15,10 +15,12 @@ module.exports = async function dagLoader(source, map, meta) {
     
     this.addContextDependency(root);
 
-    this.resolve(this.context, "ipld-dag-pb", (err, result) => {
-      this.resolve(this.context, "buffer", (err, result) => {
-        console.log(err, result)
-      })
+    this.resolve(this.context, "ipld-dag-pb", (err) => {
+      if (err) callback(err)
+    })
+
+    this.resolve(this.context, "buffer", (err) => {
+      if (err) callback(err)
     })
     
     const base64Serialized = dagNode.serialize().toString('base64')
