@@ -6,7 +6,7 @@
 #### Install
 
 ```bash
-npm install --save dag-loader
+npm install -D dag-loader
 ```
 
 #### Webpack configurations
