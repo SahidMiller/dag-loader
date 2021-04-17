@@ -24,7 +24,8 @@ const hashData = async (files, options) => {
 
   const links = []
   for await (const result of importer(files, ipld, options)) {
-    if (result.path.indexOf("/") === -1) {
+    if (result.path.indexOf("/") === -1 && 
+      result.path ) { //Remove wrapping directory
       links.push(new DAGLink(result.path, result.size, result.cid))
     }
   }
