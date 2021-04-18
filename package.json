@@ -1,6 +1,6 @@
 {
   "name": "dag-loader",
-  "version": "0.0.2",
+  "version": "0.0.4",
   "description": "Load directories and files as dag nodes",
   "author": "Sahid <sahid.miller@gmail.com>",
   "homepage": "https://github.com/SahidMiller/dag-loader#readme",

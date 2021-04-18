@@ -22,14 +22,19 @@ module.exports = async function dagLoader(source, map, meta) {
     this.resolve(this.context, "buffer", (err) => {
       if (err) callback(err)
     })
-    
-    const base64Serialized = dagNode.serialize().toString('base64')
+
+    const dagNodeLink = await dagNode.toDAGLink()
+    const cid = dagNodeLink.Hash.toBaseEncodedString()
+    const base64SerializedDagNode = dagNode.serialize().toString('base64')
     callback(null, `
       const { util } = require("ipld-dag-pb"); 
       const { Buffer } = require("buffer"); 
-      module.exports = util.deserialize(
-        Buffer.from(\`${base64Serialized}\`, 'base64')
-      );
+      module.exports = {
+        cid: "${cid}",
+        dag: util.deserialize(
+          Buffer.from(\`${base64SerializedDagNode}\`, 'base64')
+        )
+      }
     `, map, meta)
   
   } catch(err) {
