@@ -29,6 +29,8 @@ module.exports = async function dagLoader(source, map, meta) {
       
       const files = await getFiles(config.glob || "**/*", { cwd: root })
       
+      this.addContextDependency(root)
+
       const node = await hashDirectory(files)
       serialized = await node.toDAGLink()
     } else {
