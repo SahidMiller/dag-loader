@@ -1,6 +1,6 @@
 {
   "name": "dag-loader",
-  "version": "0.0.4",
+  "version": "0.1.0",
   "description": "Load directories and files as dag nodes",
   "author": "Sahid <sahid.miller@gmail.com>",
   "homepage": "https://github.com/SahidMiller/dag-loader#readme",
@@ -13,13 +13,11 @@
     "test": "echo \"Error: run tests from root\" && exit 1"
   },
   "dependencies": {
-    "buffer": "^6.0.3",
     "glob-all": "^3.2.1",
     "ipfs-unixfs": "^4.0.1",
     "ipfs-unixfs-importer": "^7.0.1",
     "ipld": "^0.29.0",
     "ipld-dag-pb": "^0.22.2",
-    "ipld-in-memory": "^8.0.0",
-    "module": "^1.2.5"
+    "ipld-in-memory": "^8.0.0"
   }
 }

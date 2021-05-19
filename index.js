@@ -1,58 +1,48 @@
-const load = require('./src/dag-loader');
-const path = require('path')
-const Module = require('module')
-const parent = module;
+const path = require('path');
+const fs = require('fs');
+
+const { hashDirectory, hashFile } = require('./src/dag-loader');
+const getFiles = require('./src/get-files')
 
 module.exports = async function dagLoader(source, map, meta) {
   this.cacheable();
+
   const callback = this.async();
+
   try {
+
+    const config = this.getOptions()
     
-    const config = execute(source, this)
-    const root = path.resolve(this.context, config.files.root)
-
-    const dagNode = await load(config.files.globs, { cwd: root })
+    let serialized
     
-    this.addContextDependency(root);
+    if (!config.path && !this.context) {
+      throw new Error("path option or file context required")
+    }
 
-    this.resolve(this.context, "ipld-dag-pb", (err) => {
-      if (err) callback(err)
-    })
+    //Handle if file is passed in with glob or path or just path w/ or w/o glob
+    if (config.path || (this.context && config.glob)) {
+      const root = config.path && path.isAbsolute(config.path) ? 
+        config.path : 
+        //Handle if file passed in with path (for w.e reason) relative to context
+        //Handle if no file passed in with path relative to rootContext
+        path.resolve(this.context || this.rootContext, config.path || "")
+      
+      const files = await getFiles(config.glob || "**/*", { cwd: root })
+      
+      const node = await hashDirectory(files)
+      serialized = await node.toDAGLink()
+    } else {
+      
+      //TODO God willing: handle specific file with and maybe without glob pattern, God willing.
+      const node = await hashFile({ absolute: this.resourcePath, path: this.resourcePath, content: fs.readFileSync(this.resourcePath) })
+      serialized = await node.toDAGLink()
+    }
+    
+    const node = { cid: serialized.Hash.toBaseEncodedString(), links: serialized.links, size: serialized.size }
+        
+    callback(null, `module.exports = ${ JSON.stringify(node, null, 2) }`, map, meta)
 
-    this.resolve(this.context, "buffer", (err) => {
-      if (err) callback(err)
-    })
-
-    const dagNodeLink = await dagNode.toDAGLink()
-    const cid = dagNodeLink.Hash.toBaseEncodedString()
-    const base64SerializedDagNode = dagNode.serialize().toString('base64')
-    callback(null, `
-      const { util } = require("ipld-dag-pb"); 
-      const { Buffer } = require("buffer"); 
-      module.exports = {
-        cid: "${cid}",
-        dag: util.deserialize(
-          Buffer.from(\`${base64SerializedDagNode}\`, 'base64')
-        )
-      }
-    `, map, meta)
-  
-  } catch(err) {
-    callback(err)
+  } catch (err) {
+      callback(err)
   }
 };
-
-//Based on webpack-contrib/val-loader
-//Using build-time config and assets and exporting dagnode-ified version, God willing.
-function execute(code, loaderContext) {
-    const module = new Module(loaderContext.resource, parent);
-  
-    // eslint-disable-next-line no-underscore-dangle
-    module.paths = Module._nodeModulePaths(loaderContext.context);
-    module.filename = loaderContext.resource;
-  
-    // eslint-disable-next-line no-underscore-dangle
-    module._compile(code, loaderContext.resource);
-  
-    return module.exports;
-}
